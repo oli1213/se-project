@@ -1,7 +1,7 @@
 # Backend DB - Firebase Upload Guide
 
 이 문서는 자취생 맞춤형 요리 추천 앱의 **백엔드 DB 파트**를 담당하며 수행한 작업 내용을 정리한 것입니다.   
-Firebase Firestore를 활용해 레시피 데이터를 구조화하고, 이를 안정적으로 업로드하는 과정을 기술합니다.  
+Firebase Firestore를 활용해 레시피 데이터를 구조화하고, 이를 안정적으로 업로드하는 과정을 기술하였습니다.  
 
 ## 빠른 실행 요약
 
