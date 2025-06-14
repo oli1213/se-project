@@ -35,14 +35,3 @@ cp .env.example .env
 # 5. 서버 실행
 bash start_server.sh
 ```
-
----
-
-## 참고 및 연동 정보
-
-- LLM 서버 주소: `OLLAMA_HOST=http://localhost:11434`
-- 벡터 검색 API 주소: `VECTOR_SEARCH_URL=http://localhost:8001/search`
-- 이미지 → 재료 추출: (VLM 팀원이 구현)
-- 레시피 DB 임베딩 및 검색: (백엔드 팀원이 구현)
-
----
