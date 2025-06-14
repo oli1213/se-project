@@ -1,13 +1,13 @@
 ```
 llm_module_full/
-├── app/
-│   ├── main.py              # FastAPI 서버 진입점
-│   └── llm/
-│       ├── routes.py        # API 라우팅 (/recommend)
-│       └── services.py      # LLM 기능 (임베딩, 채팅, 추정, 재정렬)
-├── .env.example             # 환경 변수 템플릿
-├── requirements.txt         # 필요한 패키지 목록
-└── start_server.sh          # 서버 실행 스크립트
+app/
+main.py              # FastAPI 서버 진입점
+llm/
+routes.py        # API 라우팅 (/recommend)
+services.py      # LLM 기능 (임베딩, 채팅, 추정, 재정렬)
+.env.example             # 환경 변수 템플릿
+requirements.txt         # 필요한 패키지 목록
+start_server.sh          # 서버 실행 스크립트
 ```
 
 ---
