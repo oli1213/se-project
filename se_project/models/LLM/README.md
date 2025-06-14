@@ -1,13 +1,15 @@
+## 파일 설명
+
 ```
 llm_module_full/
 app/
-main.py              # FastAPI 서버 진입점
+main.py                  # FastAPI 서버 진입점
 llm/
-routes.py        # API 라우팅 (/recommend)
-services.py      # LLM 기능 (임베딩, 채팅, 추정, 재정렬)
-.env.example             # 환경 변수 템플릿
-requirements.txt         # 필요한 패키지 목록
-start_server.sh          # 서버 실행 스크립트
+routes.py                # API 라우팅
+services.py              # LLM 기능
+.env.example             # 환경 변수
+requirements.txt         # 필요한 패키지
+start_server.sh          # 서버 실행
 ```
 
 ---
@@ -36,7 +38,7 @@ bash start_server.sh
 
 ---
 
-## 📌 참고 및 연동 정보
+## 참고 및 연동 정보
 
 - LLM 서버 주소: `OLLAMA_HOST=http://localhost:11434`
 - 벡터 검색 API 주소: `VECTOR_SEARCH_URL=http://localhost:8001/search`
