@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from llm.routes import router as llm_router
+from .llm.routes import router as llm_router
 
 app = FastAPI(title="LLM Recipe Recommender")
 
