@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import List
 
-from llm.services import embed_query, search_candidates, fill_missing_meta, rerank_recipes, parse_recipes
+from .services import embed_query, search_candidates, fill_missing_meta, rerank_recipes, parse_recipes
 
 router = APIRouter()
 
