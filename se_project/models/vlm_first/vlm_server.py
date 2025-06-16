@@ -1,26 +1,28 @@
 import asyncio
+import base64
 import json
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, HTTPException, File, UploadFile
+from pydantic import BaseModel
 from ollama import chat
 import uvicorn
 import os
 
 app = FastAPI()
 
+class ImageRequest(BaseModel):
+    """
+    Base64로 인코딩된 이미지를 JSON으로 받을 때 사용할 모델
+    """
+    image_base64: str
+
 async def _call_with_timeout(messages, timeout_s: int = 30):
-    """
-    블로킹 chat() 호출을 별도 스레드에서 실행하고,
-    지정된 시간 후에는 TimeoutError를 발생시킵니다.
-    """
     loop = asyncio.get_event_loop()
     return await asyncio.wait_for(
         loop.run_in_executor(
             None,
             lambda: chat(
                 model="llama3.2-vision",
-                messages=messages,
-                temperature=0.0,
-                max_tokens=256
+                messages=messages
             )
         ),
         timeout_s
@@ -28,11 +30,30 @@ async def _call_with_timeout(messages, timeout_s: int = 30):
 
 @app.post("/recognize")
 async def recognize(file: UploadFile = File(...)):
-    # 1) 업로드된 이미지 임시 저장
+    # 기존 multipart/form-data 방식
     tmp_path = "tmp_upload.jpg"
     with open(tmp_path, "wb") as f:
         f.write(await file.read())
 
+    return await _process_image(tmp_path)
+
+@app.post("/recognize_json")
+async def recognize_json(req: ImageRequest):
+    # 1) Base64 디코드
+    tmp_path = "tmp_upload.jpg"
+    try:
+        img_data = base64.b64decode(req.image_base64)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid base64 image data")
+    with open(tmp_path, "wb") as f:
+        f.write(img_data)
+
+    return await _process_image(tmp_path)
+
+async def _process_image(tmp_path: str):
+    """
+    공통 이미지 처리 로직: 메시지 구성, 모델 호출, JSON 파싱
+    """
     # 2) 메시지 구성
     messages = [
         {
