@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from backend.routes import router as backend_router
 from models.LLM.app.llm.routes import router as llm_router
-# from models.vlm.routes import router as vlm_router  # 나중에 필요 시 활성화
+from models.vlm.routes import router as vlm_router  
 
 app = FastAPI()
 
