@@ -1,7 +1,7 @@
 import asyncio
 import json
 from fastapi import FastAPI, File, UploadFile, HTTPException
-from ollama import chat, OllamaError
+from ollama import chat
 import uvicorn
 import os
 
@@ -28,12 +28,12 @@ async def _call_with_timeout(messages, timeout_s: int = 30):
 
 @app.post("/recognize")
 async def recognize(file: UploadFile = File(...)):
-    # 1) 이미지 저장
+    # 1) 업로드된 이미지 임시 저장
     tmp_path = "tmp_upload.jpg"
     with open(tmp_path, "wb") as f:
         f.write(await file.read())
 
-    # 2) 메시지 구성 (System + User)
+    # 2) 메시지 구성
     messages = [
         {
             "role": "system",
@@ -53,24 +53,18 @@ async def recognize(file: UploadFile = File(...)):
     try:
         resp = await _call_with_timeout(messages, timeout_s=30)
     except asyncio.TimeoutError:
-        raise HTTPException(
-            status_code=504,
-            detail="모델 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요."
-        )
-    except OllamaError as e:
+        raise HTTPException(status_code=504, detail="모델 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.")
+    except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ollama 호출 오류: {e}")
 
-    # 4) JSON 파싱
+    # 4) JSON 파싱 및 검증
     content = resp.get("message", {}).get("content", "")
     try:
         ingredients = json.loads(content)
         if not isinstance(ingredients, list):
-            raise ValueError
+            raise ValueError("응답이 리스트 형식이 아닙니다")
     except Exception:
-        raise HTTPException(
-            status_code=500,
-            detail=f"응답 파싱 실패. 원본 응답: {content}"
-        )
+        raise HTTPException(status_code=500, detail=f"응답 파싱 실패. 원본 응답: {content}")
 
     return {"ingredients": ingredients}
 
