@@ -4,7 +4,6 @@ from .services import process_image, embed_query, search_candidates, fill_missin
 
 router = APIRouter()
 
-# 이미지 업로드 & 재료 인식
 @router.post("/recognize")
 async def recognize_ingredients(file: UploadFile = File(...)):
     """
@@ -13,11 +12,9 @@ async def recognize_ingredients(file: UploadFile = File(...)):
     ingredients = await process_image(file)
     return {"ingredients": ingredients}
 
-# 레시피 추천 요청 모델
 class RecommendRequest(BaseModel):
     ingredients: list[str]
 
-# 레시피 추천 API
 @router.post("/recommend")
 async def recommend_recipes(req: RecommendRequest):
     query = ", ".join(req.ingredients)
