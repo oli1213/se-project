@@ -1,11 +1,13 @@
 from fastapi import FastAPI
+from backend.routes import router as backend_router
 from models.LLM.app.llm.routes import router as llm_router
-# vlm 라우터는 나중에 필요할 때 주석 해제
-# from models.vlm.routes import router as vlm_router
+# from models.vlm.routes import router as vlm_router  # 나중에 필요 시 활성화
 
 app = FastAPI()
 
+app.include_router(backend_router, prefix="/backend", tags=["Backend"])
 app.include_router(llm_router, prefix="/llm", tags=["LLM"])
+# app.include_router(vlm_router, prefix="/vlm", tags=["VLM"])
 
 @app.get("/")
 async def root():
