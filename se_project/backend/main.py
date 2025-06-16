@@ -7,7 +7,7 @@ app = FastAPI()
 
 app.include_router(backend_router, prefix="/backend", tags=["Backend"])
 app.include_router(llm_router, prefix="/llm", tags=["LLM"])
-# app.include_router(vlm_router, prefix="/vlm", tags=["VLM"])
+app.include_router(vlm_router, prefix="/vlm", tags=["VLM"])
 
 @app.get("/")
 async def root():
