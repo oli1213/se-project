@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - VECTOR_SEARCH_URL=http://vector-server:8001/search
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      - vector-server
+      - ollama
+
+  vector-server:
+    build:
+      context: ./mock_vector_server  
+    ports:
+      - "8001:8001"
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    command: ["run", "llama3"]
