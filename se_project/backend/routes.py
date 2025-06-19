@@ -17,6 +17,9 @@ class RecommendRequest(BaseModel):
 
 @router.post("/recommend")
 async def recommend_recipes(req: RecommendRequest):
+    """
+    Recommend recipes based on recognized ingredients.
+    """
     query = ", ".join(req.ingredients)
     embedded_query = embed_query(query)
     candidates = search_candidates(embedded_query)
