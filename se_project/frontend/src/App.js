@@ -175,32 +175,24 @@ function App() {
       {selectedRecipe && (
         <div className="modal-overlay" onClick={() => setSelectedRecipe(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>{selectedRecipe.name}</h2>
-            <p>
-              <strong>⏱ 시간:</strong> {selectedRecipe.time}분
-            </p>
-            <p>
-              <strong>🔥 난이도:</strong> {selectedRecipe.difficulty}
-            </p>
-            <p>
-              <strong>🥣 재료:</strong>
-            </p>
+            <h2> 『{selectedRecipe.name}』</h2>
+            <p><strong>⏱ 시간:</strong> {selectedRecipe.time}분</p>
+            <p><strong>🔥 난이도:</strong> {selectedRecipe.difficulty}</p>
+            <p><strong>🥣 재료:</strong></p>
             <ul>
               {selectedRecipe.ingredients.map((ing, idx) => (
-                <li key={idx}>{ing}</li>
-              ))}
-            </ul>
-            <p>
-              <strong>🍳 조리 방법:</strong>
-            </p>
-            <ul>
-              {selectedRecipe.steps.map((step, idx) => (
-                <li key={idx}>{step}</li>
-              ))}
-            </ul>
-             <button onClick={() => setSelectedRecipe(null)} className="close-btn">
-              닫기
-            </button>
+                <li key={idx}>{ing}</li> ))}
+                </ul>
+                
+                <p><strong>🍳 조리 방법:</strong></p>
+                <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
+                  {selectedRecipe.steps.map((step, idx) => (
+                    <li key={idx}>{step}</li>
+                    ))}
+                    </ul>
+                    <button onClick={() => setSelectedRecipe(null)} className="close-btn">
+                      닫기
+                      </button>
           </div>
         </div>
       )}
