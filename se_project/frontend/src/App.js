@@ -193,12 +193,12 @@ function App() {
             <p>
               <strong>🍳 조리 방법:</strong>
             </p>
-            <ol>
+            <ul>
               {selectedRecipe.steps.map((step, idx) => (
                 <li key={idx}>{step}</li>
               ))}
-</l>
-         u   <button onClick={() => setSelectedRecipe(null)} className="close-btn">
+            </ul>
+             <button onClick={() => setSelectedRecipe(null)} className="close-btn">
               닫기
             </button>
           </div>
