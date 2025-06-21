@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.routes import router as backend_router
 from models.LLM.app.llm.routes import router as llm_router
-from models.vlm.routes import router as vlm_router  
+from backend.services import router as services_router
 
 app = FastAPI()
 
@@ -22,7 +22,7 @@ app.add_middleware(
 
 app.include_router(backend_router, prefix="/backend", tags=["Backend"])
 app.include_router(llm_router, prefix="/llm", tags=["LLM"])
-app.include_router(vlm_router, prefix="/vlm", tags=["VLM"])
+app.include_router(services_router)
 
 @app.get("/")
 async def root():
