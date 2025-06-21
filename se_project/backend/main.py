@@ -1,14 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routes import router as backend_router
-from models.LLM.app.llm.routes import router as llm_router
-from backend.services import router as services_router
 
-app = FastAPI()
+import routes
+
+app = FastAPI(title="Recipe Recommendation API")
 
 origins = [
-    "http://localhost:3000",  
-    "http://127.0.0.1:3000",  
+    "http://localhost:3000", 
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001"
 ]
 
 app.add_middleware(
@@ -19,11 +20,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-app.include_router(backend_router, prefix="/backend", tags=["Backend"])
-app.include_router(llm_router, prefix="/llm", tags=["LLM"])
-app.include_router(services_router)
+app.include_router(routes.router, prefix="/backend", tags=["Backend"])
 
 @app.get("/")
 async def root():
-    return {"message": "Backend API is running!"}
+    return {"message": "Recipe Recommendation Backend API is running!"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "timestamp": "2025-06-21"}
