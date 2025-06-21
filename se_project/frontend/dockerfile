@@ -1,0 +1,24 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# package.json과 package-lock.json 복사
+COPY package*.json ./
+
+# 의존성 설치
+RUN npm ci
+
+# public 폴더 먼저 복사 (index.html 포함)
+COPY public/ ./public/
+
+# 나머지 소스 코드 복사
+COPY src/ ./src/
+
+# 환경 변수 설정
+ENV REACT_APP_BACKEND_URL=http://localhost:8003
+
+# 포트 노출
+EXPOSE 3000
+
+# 개발 서버 실행
+CMD ["npm", "start"]
