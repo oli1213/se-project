@@ -1,37 +1,75 @@
-version: '3.8'
-
 services:
+  # 메인 백엔드 서버
   backend:
     build:
       context: ./backend
+      dockerfile: dockerfile
     ports:
-      - "8000:8000"
-    environment:
-      - VECTOR_SEARCH_URL=http://vector-server:8001/search
-      - OLLAMA_HOST=http://ollama:11434
-      - VLM_RECOGNIZE_URL=http://vlm:8000/recognize
+      - "8003:8003"
+    volumes:
+      - ./data:/app/data
+      - ./backend:/app
     depends_on:
-      - vector-server
-      - ollama
-      - vlm
+      - vlm-server
+    environment:
+      - PYTHONPATH=/app
+      - VLM_SERVER_URL=http://vlm-server:8001
+    networks:
+      - recipe-network
 
-  vector-server:
-    build:
-      context: ./mock_vector_server  
-    ports:
-      - "8001:8001"
-  
-
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    command: ["run", "llama3"]
-
-  vlm:
+  # VLM (Vision Language Model) 서버
+  vlm-server:
     build:
       context: ./models/vlm_first
+      dockerfile: dockerfile
     ports:
-      - "8000:8000"
+      - "8001:8001"
+    volumes:
+      - ./data:/app/data
+      - ./models/vlm_first:/app
     environment:
-      - OLLAMA_HOST=http://ollama:11434
+      - PYTHONPATH=/app
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - recipe-network
+
+  # LLM 서버 (선택사항)
+  llm-server:
+    build:
+      context: ./models/LLM
+      dockerfile: dockerfile
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./data:/data
+    environment:
+      - PYTHONPATH=/app
+    networks:
+      - recipe-network
+
+  # 프론트엔드 (개발용)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    environment:
+      - REACT_APP_BACKEND_URL=http://localhost:8003
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+    networks:
+      - recipe-network
+
+networks:
+  recipe-network:
+    driver: bridge
+
+volumes:
+  recipe-data:
