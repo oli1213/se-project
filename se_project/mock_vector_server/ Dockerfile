@@ -1,0 +1,11 @@
+FROM python:3.10-slim
+WORKDIR /app
+
+# 같은 폴더에 있는 requirements.txt를 복사·설치
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 같은 폴더에 있는 app.py를 복사
+COPY app.py .
+# 컨테이너 기동 시 FastAPI 서버 실행
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8001"]
