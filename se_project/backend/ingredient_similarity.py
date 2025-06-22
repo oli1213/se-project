@@ -1,6 +1,3 @@
-"""
-재료 유사도 판단을 위한 LLM Embedding 기반 서비스
-"""
 import json
 import numpy as np
 import requests
@@ -18,16 +15,13 @@ class IngredientSimilarityService:
         self.embedding_model = "nomic-embed-text"  # 또는 "mxbai-embed-large"
         self.similarity_threshold = 0.7  # 유사도 임계값
         
-        # 재료 임베딩 캐시
         self.ingredient_embeddings = {}
         self.cache_file = Path("ingredient_embeddings_cache.json")
         self.load_cache()
         
-        # 한국어 재료 사전
         self.korean_ingredients = self._load_korean_ingredients()
     
     def _load_korean_ingredients(self) -> Dict[str, List[str]]:
-        """한국어 재료 동의어 사전 로드"""
         return {
             "두부": ["두부", "순두부", "연두부", "부침두부", "모두부"],
             "돼지고기": ["돼지고기", "삼겹살", "목살", "항정살", "등심", "안심", "앞다리살"],
@@ -67,8 +61,7 @@ class IngredientSimilarityService:
         }
     
     def get_embedding(self, text: str) -> List[float]:
-        """텍스트의 임베딩 벡터 생성"""
-        # 캐시에서 확인
+        
         if text in self.ingredient_embeddings:
             return self.ingredient_embeddings[text]
         
@@ -86,7 +79,6 @@ class IngredientSimilarityService:
             
             embedding = response.json()["embedding"]
             
-            # 캐시에 저장
             self.ingredient_embeddings[text] = embedding
             self.save_cache()
             
@@ -94,16 +86,14 @@ class IngredientSimilarityService:
             
         except Exception as e:
             logger.error(f"임베딩 생성 오류 ({text}): {e}")
-            # 더미 임베딩 반환 (실제 환경에서는 제거)
             return [0.0] * 384  # nomic-embed-text 차원수
     
     def calculate_similarity(self, embedding1: List[float], embedding2: List[float]) -> float:
-        """코사인 유사도 계산"""
+
         try:
             vec1 = np.array(embedding1)
             vec2 = np.array(embedding2)
             
-            # 코사인 유사도 계산
             dot_product = np.dot(vec1, vec2)
             norm1 = np.linalg.norm(vec1)
             norm2 = np.linalg.norm(vec2)
@@ -119,7 +109,6 @@ class IngredientSimilarityService:
             return 0.0
     
     def find_similar_ingredients(self, target_ingredient: str, ingredient_list: List[str]) -> List[Tuple[str, float]]:
-        """목표 재료와 유사한 재료들 찾기"""
         target_embedding = self.get_embedding(target_ingredient)
         similarities = []
         
@@ -133,32 +122,27 @@ class IngredientSimilarityService:
             if similarity >= self.similarity_threshold:
                 similarities.append((ingredient, similarity))
         
-        # 유사도 순으로 정렬
         similarities.sort(key=lambda x: x[1], reverse=True)
         return similarities
     
     def match_user_ingredients_to_recipes(self, user_ingredients: List[str], recipe_ingredients: List[str]) -> Dict:
-        """사용자 재료와 레시피 재료 매칭"""
         matches = {}
         similarity_scores = {}
         
         for user_ing in user_ingredients:
             best_matches = []
             
-            # 1. 직접 매칭 확인
             for recipe_ing in recipe_ingredients:
                 if user_ing.lower() in recipe_ing.lower() or recipe_ing.lower() in user_ing.lower():
                     best_matches.append((recipe_ing, 1.0, "exact"))
                     continue
             
-            # 2. 한국어 동의어 사전에서 확인
             for base_ingredient, synonyms in self.korean_ingredients.items():
                 if user_ing in synonyms:
                     for recipe_ing in recipe_ingredients:
                         if any(syn in recipe_ing for syn in synonyms):
                             best_matches.append((recipe_ing, 0.95, "synonym"))
             
-            # 3. 임베딩 기반 유사도 검색
             if not best_matches:
                 similar_ingredients = self.find_similar_ingredients(user_ing, recipe_ingredients)
                 for ingredient, score in similar_ingredients[:3]:  # 상위 3개만
@@ -175,16 +159,13 @@ class IngredientSimilarityService:
         }
     
     def enhanced_recipe_matching(self, user_ingredients: List[str], recipes: List[Dict]) -> List[Dict]:
-        """향상된 레시피 매칭 (유사도 기반)"""
         enhanced_recipes = []
         
         for recipe in recipes:
             recipe_ingredients = recipe.get("ingredients", [])
             
-            # 재료 매칭 수행
             match_result = self.match_user_ingredients_to_recipes(user_ingredients, recipe_ingredients)
             
-            # 매칭 점수 계산
             total_score = 0
             matched_count = 0
             
@@ -192,10 +173,8 @@ class IngredientSimilarityService:
                 total_score += similarity_score
                 matched_count += 1
             
-            # 평균 유사도 점수
             avg_similarity = total_score / len(user_ingredients) if user_ingredients else 0
             
-            # 레시피에 유사도 정보 추가
             enhanced_recipe = recipe.copy()
             enhanced_recipe.update({
                 "ingredient_matches": match_result["matches"],
@@ -207,13 +186,11 @@ class IngredientSimilarityService:
             
             enhanced_recipes.append(enhanced_recipe)
         
-        # 유사도 점수순으로 정렬
         enhanced_recipes.sort(key=lambda x: x["similarity_score"], reverse=True)
         
         return enhanced_recipes
     
     def load_cache(self):
-        """임베딩 캐시 로드"""
         try:
             if self.cache_file.exists():
                 with open(self.cache_file, 'r', encoding='utf-8') as f:
@@ -224,7 +201,6 @@ class IngredientSimilarityService:
             self.ingredient_embeddings = {}
     
     def save_cache(self):
-        """임베딩 캐시 저장"""
         try:
             with open(self.cache_file, 'w', encoding='utf-8') as f:
                 json.dump(self.ingredient_embeddings, f, ensure_ascii=False, indent=2)
@@ -232,7 +208,7 @@ class IngredientSimilarityService:
             logger.error(f"캐시 저장 오류: {e}")
     
     def test_similarity(self, ingredient1: str, ingredient2: str) -> float:
-        """두 재료 간 유사도 테스트"""
+
         emb1 = self.get_embedding(ingredient1)
         emb2 = self.get_embedding(ingredient2)
         similarity = self.calculate_similarity(emb1, emb2)
@@ -242,7 +218,6 @@ class IngredientSimilarityService:
 
 
 def main():
-    """커맨드라인 테스트 인터페이스"""
     import argparse
     
     parser = argparse.ArgumentParser(description="재료 유사도 판단 테스트")
@@ -270,7 +245,6 @@ def main():
             print(f"  {ingredient}: {score:.3f}")
     
     elif args.match_recipe:
-        # 테스트용 사용자 재료와 레시피
         user_ingredients = ["두부", "삼겹살", "양파", "마늘"]
         
         test_recipes = [
@@ -303,7 +277,6 @@ def main():
                 print(f"  {user_ing} → {matches}")
     
     else:
-        # 기본 테스트
         print("재료 유사도 테스트:")
         test_pairs = [
             ("두부", "순두부"),
