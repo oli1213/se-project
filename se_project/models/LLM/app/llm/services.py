@@ -6,7 +6,6 @@ from typing import List, Dict
 def load_recipes() -> List[Dict]:
 
     try:
-        # 상대 경로로 레시피 파일 찾기
         current_dir = Path(__file__).parent
         data_path = current_dir.parent.parent.parent.parent / "data" / "recipes_updated.json"
         
@@ -43,16 +42,13 @@ def load_recipes() -> List[Dict]:
 
 def embed_query(ingredients: List[str]) -> List[float]:
 
-    # 재료들을 문자열로 합치기
     ingredients_text = " ".join(ingredients)
     
-    # 간단한 해시 기반 벡터 생성
     hash_value = hashlib.md5(ingredients_text.encode()).hexdigest()
     vector = []
     for i in range(0, len(hash_value), 2):
         vector.append(int(hash_value[i:i+2], 16) / 255.0)
     
-    # 128차원으로 맞춤
     while len(vector) < 128:
         vector.append(0.0)
     
@@ -62,7 +58,6 @@ def search_candidates(embedded_query: List[float]) -> List[Dict]:
 
     recipes = load_recipes()
     
-    # 모든 레시피를 후보로 반환 (실제로는 유사도 계산 필요)
     candidates = []
     for recipe in recipes:
         candidates.append({
@@ -85,7 +80,7 @@ def fill_missing_meta(recipe: Dict) -> Dict:
     if "difficulty" not in recipe:
         recipe["difficulty"] = recipe.get("difficulty", "중급")
     
-    # 난이도를 숫자로 변환
+    # 난이도 숫자 변환
     difficulty_map = {"초급": 1, "중급": 3, "고급": 5}
     if isinstance(recipe["difficulty"], str):
         recipe["difficulty"] = difficulty_map.get(recipe["difficulty"], 3)
@@ -99,17 +94,16 @@ def rerank_recipes(candidates: List[Dict], ingredients: List[str]) -> str:
         score = calculate_ingredient_match_score(recipe["ingredients"], ingredients)
         recipe["match_score"] = score
     
-    # 점수순으로 정렬
+    # 점수순 정렬
     sorted_candidates = sorted(candidates, key=lambda x: x.get("match_score", 0), reverse=True)
     
-    return sorted_candidates[:5]  # 상위 5개만 반환
+    return sorted_candidates[:5]  
 
 def calculate_ingredient_match_score(recipe_ingredients: List[str], user_ingredients: List[str]) -> float:
 
     if not recipe_ingredients or not user_ingredients:
         return 0.0
     
-    # 간단한 키워드 매칭
     matches = 0
     user_ingredients_lower = [ing.lower() for ing in user_ingredients]
     
@@ -123,9 +117,7 @@ def calculate_ingredient_match_score(recipe_ingredients: List[str], user_ingredi
     return matches / len(recipe_ingredients)
 
 def parse_recipes(recipe_list: List[Dict]) -> List[Dict]:
-    """
-    레시피 리스트를 파싱하여 표준 형식으로 변환합니다.
-    """
+
     parsed_recipes = []
     
     for recipe in recipe_list:
@@ -136,7 +128,7 @@ def parse_recipes(recipe_list: List[Dict]) -> List[Dict]:
             "difficulty": recipe.get("difficulty", 3)
         }
         
-        # 난이도를 숫자로 변환
+        # 난이도 숫자 변환
         if isinstance(parsed_recipe["difficulty"], str):
             difficulty_map = {"초급": 1, "중급": 3, "고급": 5}
             parsed_recipe["difficulty"] = difficulty_map.get(parsed_recipe["difficulty"], 3)
