@@ -1,141 +1,147 @@
-# 자취생 맞춤 AI 요리 추천 앱
+# 자취생 맞춤 요리 추천 서비스
 
-## 프로젝트 개요
-
-**냉장고 사진 한 장으로 맞춤 레시피를 추천받는 AI 기반 요리 앱**
-
-- **개발 목적**: 자취생의 식재료 낭비 방지 및 요리 진입장벽 해소
-- **핵심 기술**: VLM + LLM
-- **타겟 사용자**: 요리 초보 자취생 (20대 대학생)
-
----
+냉장고 속 재료 사진을 업로드하면 AI가 재료를 인식하고, LLM을 활용하여 맞춤 레시피를 추천해주는 서비스입니다.
 
 ## 주요 기능
 
-### 1. **AI 기반 재료 인식**
-- 냉장고/식재료 사진 업로드
-- VLM로 재료 자동 추출
-
-### 2. **맞춤형 레시피 추천**
-- 인식된 재료 기반 레시피 검색
-- 조리 시간, 난이도 필터링
-- 자취생 특화 (간단한 요리, 적은 재료)
-
-### 3. **실용적 UX/UI**
-- 직관적인 사진 업로드 인터페이스
-- 단계별 조리법 상세 안내
-
----
+- **이미지 기반 재료 인식**: VLM을 통한 냉장고 사진 분석
+- **AI 레시피 추천**: LLM 기반 맞춤형 요리법 생성
+- **지능형 재료 매칭**: "두부" → "순두부", "돼지고기" → "삼겹살" 자동 매칭
+- **실시간 처리**: 수 초 내 즉석 레시피 추천
 
 ## 기술 스택
 
-### Frontend
-- **React 19.1.0**: 사용자 인터페이스
-- **CSS3**: 커스텀 스타일링
-
-### Backend
-- **FastAPI**: Python 웹 프레임워크
-- **Uvicorn**: ASGI 서버
-- **Pydantic**: 데이터 검증
-
-### AI/ML
-- **Ollama**: 로컬 LLM 실행 환경
-- **Llama 3.2 Vision**: 이미지 인식 모델
-- **Llama 3**: 텍스트 생성 모델
-
-### Database & Storage
-- **Firebase Firestore**: 레시피 데이터 저장
-- **Local JSON**: 백업 데이터 소스
-
-### DevOps
-- **Docker & Docker Compose**: 컨테이너화
-- **Multi-service Architecture**: 마이크로서비스
+- **Frontend**: React 19.1.0, JavaScript
+- **Backend**: FastAPI 0.104.1, Python 3.11
+- **AI/ML**: Ollama, Vision Language Model, LLM Embedding
+- **Database**: SQLite, JSON
+- **Container**: Docker, Docker Compose
 
 ---
 
-## 실행 가이드
+## 빠른 시작 (5분 설치)
+
+### 1단계: 필수 프로그램 설치
+
+#### Windows 사용자
+```bash
+# 1. Docker Desktop 설치
+# https://www.docker.com/products/docker-desktop/ 에서 다운로드
+# 설치 후 Docker Desktop 실행
+
+# 2. Git 설치 (선택사항)
+# https://git-scm.com/download/win 에서 다운로드
+```
+
+#### 설치 확인
+```bash
+# 터미널(cmd)에서 확인
+docker --version
+# 결과: Docker version 24.x.x 이상이면 OK
+```
+
+### 2단계: 프로젝트 다운로드
 
 ```bash
-# 1. 저장소 클론
-git clone [repository-url]
-cd se_project
+# 방법 1: Git 사용 (권장)
+git clone https://github.com/yourusername/recipe-ai.git
+cd recipe-ai
 
-# 2. AI 모델 설치
-docker-compose up -d ollama
+# 방법 2: ZIP 다운로드
+# GitHub에서 "Code" → "Download ZIP" 클릭
+# 압축 해제 후 폴더로 이동
+```
 
-# 3. 모델 다운로드
-docker exec -it se_project-ollama-1 ollama pull llama3.2-vision
-docker exec -it se_project-ollama-1 ollama pull llama3
+### 3단계: 한 번에 실행
 
-# 4. 전체 시스템 시작
+```bash
+# 프로젝트 루트 디렉토리에서
 docker-compose up --build
 
-# 5. 앱 접속
-# http://localhost:3000
+# 처음 실행 시 5-10분 소요 (이미지 다운로드)
+# 이후 실행은 30초 내
 ```
 
-### **Step 1: 메인 페이지**
-- http://localhost:3000 접속
-- "시작하기" 버튼 클릭
+### 4단계: 서비스 접속
 
-### **Step 2: 이미지 업로드**
-- "냉장고 사진 업로드" 클릭
-- 테스트 이미지 업로드 (냉장고, 식재료 사진)
+```bash
+# 모든 서비스가 실행되면 브라우저에서:
+http://localhost:3000
 
-### **Step 3: AI 재료 인식**
-- 업로드 후 자동으로 재료 인식
-- 인식된 재료 목록 확인
-
-### **Step 4: 레시피 추천**
-- AI가 추천하는 레시피 표시
-- 조리시간, 난이도 정보 확인
-
-### **Step 5: 상세 레시피**
-- 원하는 레시피 클릭
-- 재료 목록 및 단계별 조리법 확인
-
----
-
-## 시스템 아키텍처
-
-```
-┌─────────────┐    ┌──────────────┐    ┌─────────────┐
-│   사용자     │───▶│  프론트엔드   │───▶│   백엔드    │
-│  (브라우저)  │    │   (React)    │    │  (FastAPI)  │
-└─────────────┘    └──────────────┘    └─────────────┘
-                                              │
-                   ┌──────────────┐          │
-                   │  VLM 서버    │◀─────────┤
-                   │ (이미지인식) │          │
-                   └──────────────┘          │
-                                              │
-                   ┌──────────────┐          │
-                   │  LLM 서버    │◀─────────┤
-                   │ (레시피추천) │          │
-                   └──────────────┘          │
-                                              │
-                   ┌──────────────┐          │
-                   │   Firebase   │◀─────────┘
-                   │  (데이터베이스)│
-                   └──────────────┘
+# 완료! 사진을 업로드해보세요!
 ```
 
 ---
 
-## 주요 API 엔드포인트
+## 📖 상세 설치 가이드
 
-### 백엔드 API (포트: 8003)
-- `POST /backend/recognize` - 이미지 재료 인식
-- `POST /backend/recommend` - 레시피 추천
-- `GET /backend/recipes` - 전체 레시피 조회
-- `GET /health` - 서버 상태 확인
+### 🔧 개발 환경 설정
 
-### VLM 서버 (포트: 8001)
-- `POST /recognize` - 이미지 인식
-- `GET /health` - VLM 서버 상태
+#### 1. 프로젝트 구조 확인
+```
+se_project/
+├── frontend/          # React 앱 (포트 3000)
+├── ⚙backend/           # FastAPI 서버 (포트 8003)
+├── models/
+│   ├── LLM/             # 레시피 추천 (포트 8002)
+│   └── vlm_first/       # 이미지 인식 (포트 8001)
+├── data/             # 레시피 데이터
+└── docker-compose.yml
+```
 
-### LLM 서버 (포트: 8002)
-- `POST /recommend` - 레시피 추천
-- `GET /health` - LLM 서버 상태
+#### 2. 환경별 실행 방법
+
+##### Docker 실행 (권장)
+```bash
+# 전체 서비스 실행
+docker-compose up -d
+
+# 로그 확인
+docker-compose logs -f
+
+# 서비스 중지
+docker-compose down
+
+# 완전 재빌드 (문제 시)
+docker-compose down
+docker-compose build --no-cache
+docker-compose up
+```
+
+##### 로컬 개발 실행
+```bash
+# 1. Backend 실행
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8003
+
+# 2. Frontend 실행 (새 터미널)
+cd frontend
+npm install
+npm start
+
+# 3. LLM 서버 실행 (새 터미널)
+cd models/LLM
+pip install -r requirements.txt
+python main.py
+
+# 4. VLM 서버 실행 (새 터미널)  
+cd models/vlm_first
+pip install -r requirements.txt
+python vlm_server.py
+```
+
+---
+
+## 사용 가이드
+
+### 효과적인 사용법
+
+#### 최적의 사진 촬영
+- **밝은 조명**에서 촬영
+- **재료가 명확히 보이는** 각도
+- **10MB 이하** 파일 크기
+- 흐리거나 어두운 사진 지양
+
 
 ---
