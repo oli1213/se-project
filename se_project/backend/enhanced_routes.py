@@ -26,7 +26,6 @@ except ImportError as e:
 
 router = APIRouter()
 
-# 유사도 서비스 초기화
 try:
     similarity_service = IngredientSimilarityService()
     print("✅ 유사도 서비스 초기화 성공")
@@ -60,7 +59,6 @@ class EnhancedRecipe(BaseModel):
     ingredient_matches: Dict[str, List[List]]
 
 def load_recipes_with_path_fallback():
-    """여러 경로에서 레시피 파일 찾기"""
     possible_paths = [
         Path("/app/data/recipes_updated.json"),  # Docker
         Path("./data/recipes_updated.json"),     # 현재 디렉토리
@@ -85,7 +83,6 @@ def load_recipes_with_path_fallback():
     return get_default_recipes()
 
 def get_default_recipes():
-    """기본 레시피 반환"""
     return [
         {
             "name": "간장계란볶음밥",
@@ -127,19 +124,16 @@ def get_default_recipes():
 
 @router.post("/enhanced-recommend", response_model=List[EnhancedRecipe])
 async def enhanced_recommend(req: EnhancedRecommendRequest):
-    """유사도 기반 향상된 레시피 추천"""
     
     if not req.ingredients:
         raise HTTPException(status_code=400, detail="재료 목록이 비어있습니다.")
     
     try:
-        # 레시피 데이터 로드
         all_recipes = load_recipes_with_path_fallback()
         
         print(f"📝 사용자 재료: {req.ingredients}")
         print(f"🔍 총 {len(all_recipes)}개 레시피에서 검색")
         
-        # 기본 필터링 (시간, 난이도)
         filtered_recipes = []
         for recipe in all_recipes:
             recipe_time = recipe.get('time', 30)
@@ -153,14 +147,12 @@ async def enhanced_recommend(req: EnhancedRecommendRequest):
         
         if req.use_similarity and hasattr(similarity_service, 'enhanced_recipe_matching'):
             try:
-                # 유사도 기반 매칭
                 similarity_service.similarity_threshold = req.similarity_threshold
                 enhanced_recipes = similarity_service.enhanced_recipe_matching(
                     req.ingredients, 
                     filtered_recipes
                 )
                 
-                # 유사도 점수가 0보다 큰 레시피만 선택
                 matched_recipes = [r for r in enhanced_recipes if r.get("similarity_score", 0) > 0]
                 print(f"🎯 유사도 기반 매칭: {len(matched_recipes)}개")
                 
@@ -168,15 +160,12 @@ async def enhanced_recommend(req: EnhancedRecommendRequest):
                 print(f"⚠️ 유사도 매칭 오류: {e}, 기본 방식 사용")
                 matched_recipes = basic_recipe_matching(req.ingredients, filtered_recipes)
         else:
-            # 기존 방식 (단순 문자열 매칭)
             matched_recipes = basic_recipe_matching(req.ingredients, filtered_recipes)
         
         print(f"🎯 최종 매칭된 레시피: {len(matched_recipes)}개")
         
-        # 상위 5개 선택
         top_recipes = matched_recipes[:5]
         
-        # 응답 형식으로 변환
         result = []
         for recipe in top_recipes:
             # difficulty를 숫자로 변환
@@ -209,7 +198,6 @@ async def enhanced_recommend(req: EnhancedRecommendRequest):
         raise HTTPException(status_code=500, detail=f"레시피 추천 중 오류가 발생했습니다: {str(e)}")
 
 def basic_recipe_matching(user_ingredients: List[str], recipes: List[Dict]) -> List[Dict]:
-    """기본 문자열 매칭 방식"""
     matched_recipes = []
     
     for recipe in recipes:
@@ -232,13 +220,11 @@ def basic_recipe_matching(user_ingredients: List[str], recipes: List[Dict]) -> L
             recipe['ingredient_matches'] = {ing: [[ing, 1.0, "basic"]] for ing in matched_user_ingredients}
             matched_recipes.append(recipe)
     
-    # 매칭 점수순으로 정렬
     matched_recipes.sort(key=lambda x: x['similarity_score'], reverse=True)
     return matched_recipes
 
 @router.post("/test-similarity")
 async def test_ingredient_similarity(ingredients: List[str]):
-    """재료 간 유사도 테스트 API"""
     if len(ingredients) != 2:
         raise HTTPException(status_code=400, detail="정확히 2개의 재료를 입력해주세요.")
     
@@ -248,7 +234,6 @@ async def test_ingredient_similarity(ingredients: List[str]):
         if hasattr(similarity_service, 'test_similarity'):
             similarity = similarity_service.test_similarity(ingredient1, ingredient2)
         else:
-            # 기본 문자열 유사도
             similarity = 0.8 if ingredient1.lower() in ingredient2.lower() or ingredient2.lower() in ingredient1.lower() else 0.3
         
         return {
@@ -263,7 +248,6 @@ async def test_ingredient_similarity(ingredients: List[str]):
 
 @router.get("/similarity-status")
 async def get_similarity_status():
-    """유사도 서비스 상태 확인"""
     try:
         status = {
             "service_available": hasattr(similarity_service, 'enhanced_recipe_matching'),
@@ -277,7 +261,6 @@ async def get_similarity_status():
 
 @router.get("/health")
 async def health_check():
-    """헬스 체크"""
     return {
         "status": "healthy",
         "similarity_service": "available" if hasattr(similarity_service, 'enhanced_recipe_matching') else "basic_mode"
