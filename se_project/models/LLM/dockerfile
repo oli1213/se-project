@@ -17,8 +17,11 @@ COPY . .
 # 데이터 디렉토리 생성
 RUN mkdir -p /app/data
 
+# Python 경로 설정
+ENV PYTHONPATH=/app
+
 # 포트 노출
 EXPOSE 8002
 
-# 애플리케이션 실행
+# 애플리케이션 실행 (app 폴더의 main 모듈 지정)
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
