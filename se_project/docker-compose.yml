@@ -9,15 +9,15 @@ services:
     volumes:
       - ./data:/app/data
       - ./backend:/app
-      - ./models/LLM:/app/models/LLM  # LLM 폴더 마운트 추가
+      - ./models/LLM:/app/models/LLM  
     depends_on:
       - vlm-server
     environment:
       - PYTHONPATH=/app
       - VLM_SERVER_URL=http://vlm-server:8001
-      - OLLAMA_HOST=http://host.docker.internal:11434  # Ollama 연결
+      - OLLAMA_HOST=http://host.docker.internal:11434  
     extra_hosts:
-      - "host.docker.internal:host-gateway"  # Ollama 접근용
+      - "host.docker.internal:host-gateway"  
     networks:
       - recipe-network
 
@@ -39,7 +39,7 @@ services:
     networks:
       - recipe-network
 
-  # LLM 서버 (선택사항 - 현재는 백엔드에 통합)
+  # LLM 서버 
   llm-server:
     build:
       context: ./models/LLM
@@ -57,7 +57,7 @@ services:
     networks:
       - recipe-network
 
-  # 프론트엔드 (개발용)
+  # 프론트엔드 
   frontend:
     build:
       context: ./frontend
