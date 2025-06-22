@@ -10,13 +10,11 @@ from PIL import Image
 from pathlib import Path
 import uvicorn
 
-# 로깅 설정
 logger = logging.getLogger("vlm")
 logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(title="VLM Food Recognition API")
 
-# ingredient_kor_map.json 파일 경로 - Docker와 로컬 모두 지원
 MAP_PATH = Path("/app/data/ingredient_kor_map.json")
 if not MAP_PATH.exists():
     MAP_PATH = Path(__file__).parent.parent.parent / "data" / "ingredient_kor_map.json"
@@ -77,16 +75,15 @@ def resize_image(image_path: str, max_size: int = 1024, quality: int = 85) -> st
         logger.error(f"이미지 리사이즈 실패: {e}")
         return image_path
 
-async def call_with_timeout(messages):  # 타임아웃 매개변수 제거
+async def call_with_timeout(messages):
     try:
-        # Ollama 임포트 시도
+        
         from ollama import chat
         
-        # 환경 변수에서 모델명 읽기
         vision_model = os.getenv("VISION_MODEL", "moondream")
         
         loop = asyncio.get_event_loop()
-        # 타임아웃 없이 실행 - 언제까지라도 기다림
+
         return await loop.run_in_executor(
             None,
             lambda: chat(
@@ -95,8 +92,8 @@ async def call_with_timeout(messages):  # 타임아웃 매개변수 제거
                 options={
                     'temperature': 0.1,
                     'top_p': 0.9,
-                    'num_predict': 50,  # 100 → 50으로 줄임 (더 빠른 응답)
-                    'num_ctx': 2048,    # 컨텍스트 크기 제한
+                    'num_predict': 50,
+                    'num_ctx': 2048,
                 }
             )
         )
@@ -129,7 +126,6 @@ def extract_ingredients_from_image_name(image_path: str) -> list[str]:
         'cheese', 'butter', 'rice', 'noodles'
     ]
     
-    # 랜덤하게 3-5개 재료 선택
     import random
     selected = random.sample(common_ingredients, random.randint(3, 5))
     return selected
@@ -225,7 +221,6 @@ async def process_image(tmp_path: str):
                     raise HTTPException(status_code=503, detail="Ollama 서버와 연결할 수 없습니다.")
                 await asyncio.sleep(2)
             else:
-                # 연결 문제가 아닌 오류는 바로 실패 처리
                 raise HTTPException(status_code=500, detail=f"Ollama 호출 오류: {e}")
 
     if resp is None:
@@ -251,9 +246,7 @@ async def process_image(tmp_path: str):
             break
 
     if not json_str:
-        # JSON 형식이 아닌 경우 영어 단어만 추출
         words = re.findall(r'\b[a-zA-Z]+\b', content)
-        # 음식 재료 같은 단어만 필터링
         food_words = []
         common_foods = ['egg', 'chicken', 'beef', 'pork', 'fish', 'rice', 'bread', 'milk', 'cheese', 
                        'tomato', 'onion', 'garlic', 'potato', 'carrot', 'lettuce', 'spinach', 
