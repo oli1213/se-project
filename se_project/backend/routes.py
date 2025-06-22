@@ -9,21 +9,19 @@ from pathlib import Path
 
 router = APIRouter()
 
-# 설정 - 환경 변수로 설정, 기본값은 Docker 컨테이너 이름
-VLM_SERVER_URL = os.getenv("VLM_SERVER_URL", "http://vlm-server:8001")  # ✅ 포트 수정
+VLM_SERVER_URL = os.getenv("VLM_SERVER_URL", "http://vlm-server:8001") 
 LLM_SERVER_URL = os.getenv("LLM_SERVER_URL", "http://llm-server:8002")
 
-# 데이터 파일 경로 - 여러 경로에서 찾기
+
 POSSIBLE_RECIPE_PATHS = [
-    Path("/app/data/recipes_updated.json"),           # Docker 볼륨 마운트
-    Path("/app/project/data/recipes_updated.json"),   # 프로젝트 전체 마운트
-    Path(__file__).parent.parent / "data" / "recipes_updated.json",  # 상대 경로
-    Path(__file__).parent / "data" / "recipes_updated.json",         # 현재 디렉토리
-    Path("data/recipes_updated.json"),                # 현재 작업 디렉토리
+    Path("/app/data/recipes_updated.json"),           
+    Path("/app/project/data/recipes_updated.json"),   
+    Path(__file__).parent.parent / "data" / "recipes_updated.json",  
+    Path(__file__).parent / "data" / "recipes_updated.json",     
+    Path("data/recipes_updated.json"),  
 ]
 
 def find_recipes_file():
-    """레시피 파일을 여러 경로에서 찾기"""
     for path in POSSIBLE_RECIPE_PATHS:
         if path.exists():
             print(f"✅ 레시피 파일 발견: {path}")
@@ -33,7 +31,6 @@ def find_recipes_file():
         print(f"   - {path} (존재: {path.exists()})")
     return None
 
-# 시작 시 레시피 파일 확인
 RECIPES_FILE = find_recipes_file()
 
 class RecommendRequest(BaseModel):
@@ -50,9 +47,6 @@ class Recipe(BaseModel):
 
 @router.post("/recognize")
 async def recognize_ingredients(file: UploadFile = File(...)):
-    """
-    Upload an image to recognize ingredients using the VLM model.
-    """
     # 파일 검증
     if not file.content_type or not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="이미지 파일만 업로드 가능합니다.")
@@ -143,23 +137,19 @@ async def recommend_recipes(req: RecommendRequest):
                     print(f"LLM 서버에서 레시피 추천 성공: {len(data)}개 레시피")
                     print(f"LLM 응답 데이터 구조: {data}")
                     
-                    # LLM 응답에 재료/조리법이 없으므로 로컬 데이터에서 보완
                     formatted_recipes = []
                     for i, recipe in enumerate(data):
                         print(f"레시피 {i+1} 원본 데이터: {recipe}")
                         
                         recipe_name = recipe.get("title", recipe.get("name", ""))
                         
-                        # 로컬 레시피 파일에서 동일한 이름의 레시피 찾기
                         local_recipe = await find_local_recipe_by_name(recipe_name)
                         
                         if local_recipe:
-                            # 로컬 데이터에서 재료와 조리법 가져오기
                             recipe_ingredients = local_recipe.get("ingredients", [])
                             recipe_steps = local_recipe.get("steps", [])
                             print(f"로컬에서 {recipe_name} 데이터 보완 완료")
                         else:
-                            # 로컬에서 찾지 못하면 기본값
                             recipe_ingredients = ["재료 정보를 준비 중입니다"]
                             recipe_steps = ["조리 방법을 준비 중입니다"]
                             print(f"로컬에서 {recipe_name} 데이터를 찾지 못함")
@@ -211,7 +201,6 @@ async def recommend_recipes(req: RecommendRequest):
         return await get_local_recipes_with_smart_matching(req)
 
 async def find_local_recipe_by_name(recipe_name: str):
-    """레시피 이름으로 로컬 데이터에서 상세 정보 찾기"""
     try:
         current_recipes_file = find_recipes_file()
         if not current_recipes_file:
@@ -220,7 +209,6 @@ async def find_local_recipe_by_name(recipe_name: str):
         with open(current_recipes_file, 'r', encoding='utf-8') as f:
             all_recipes = json.load(f)
         
-        # 이름이 일치하는 레시피 찾기
         for recipe in all_recipes:
             if recipe.get('name', '').lower() == recipe_name.lower():
                 return recipe
@@ -230,11 +218,8 @@ async def find_local_recipe_by_name(recipe_name: str):
     except Exception as e:
         print(f"로컬 레시피 검색 오류: {e}")
         return None
-    """
-    로컬 레시피 데이터에서 재료 기반으로 레시피 추천
-    """
+
     try:
-        # 레시피 파일 재검색
         current_recipes_file = find_recipes_file()
         
         if not current_recipes_file:
@@ -249,11 +234,9 @@ async def find_local_recipe_by_name(recipe_name: str):
         
         print(f"📚 총 {len(all_recipes)}개 레시피 로드됨")
         
-        # 디버깅: 처음 5개 레시피 이름 출력
         recipe_names = [recipe.get('name', 'Unknown') for recipe in all_recipes[:5]]
         print(f"📋 처음 5개 레시피: {recipe_names}")
         
-        # 재료 기반 레시피 매칭 로직
         matched_recipes = []
         user_ingredients = [ing.lower().strip() for ing in req.ingredients]
         print(f"🔍 매칭할 사용자 재료: {user_ingredients}")
@@ -262,7 +245,6 @@ async def find_local_recipe_by_name(recipe_name: str):
             recipe_ingredients = [ing.lower() for ing in recipe.get('ingredients', [])]
             recipe_name = recipe.get('name', 'Unknown')
             
-            # 재료 매칭 점수 계산
             matches = 0
             matched_items = []
             
@@ -295,7 +277,7 @@ async def find_local_recipe_by_name(recipe_name: str):
         
         print(f"🎯 필터링 후 매칭된 레시피: {len(matched_recipes)}개")
         
-        # 매칭되는 레시피가 없으면 조건을 완화해서 다시 검색
+        # 매칭되는 레시피가 없으면 조건 완화
         if not matched_recipes:
             print("⚠️ 매칭되는 레시피가 없어 조건 완화해서 재검색")
             
@@ -312,31 +294,27 @@ async def find_local_recipe_by_name(recipe_name: str):
                         "matched_items": []
                     })
         
-        # 매칭 점수순으로 정렬
+        # 매칭 점수순 정렬
         matched_recipes.sort(key=lambda x: x['match_score'], reverse=True)
         
         print(f"📊 정렬된 레시피 (상위 5개):")
         for i, item in enumerate(matched_recipes[:5]):
             print(f"   {i+1}. {item['recipe'].get('name')} (점수: {item['match_score']})")
         
-        # 상위 3개 선택하여 프론트엔드 형식으로 변환
         result_recipes = []
         for item in matched_recipes[:3]:
             recipe = item['recipe']
             
-            # 매칭된 재료와 필요한 재료 분석
             recipe_ingredients = recipe.get('ingredients', [])
             available_ingredients = []
             missing_ingredients = []
             
-            # 사용자가 가진 재료 중 레시피에 필요한 것들 찾기
             for user_ing in req.ingredients:
                 for recipe_ing in recipe_ingredients:
                     if user_ing.lower() in recipe_ing.lower() or any(word.lower() in recipe_ing.lower() for word in user_ing.split()):
                         available_ingredients.append(user_ing)
                         break
             
-            # 부족한 재료 찾기
             for recipe_ing in recipe_ingredients[:5]:
                 found = False
                 for user_ing in req.ingredients:
@@ -346,7 +324,6 @@ async def find_local_recipe_by_name(recipe_name: str):
                 if not found:
                     missing_ingredients.append(recipe_ing)
             
-            # 요약 메시지 생성
             if item['match_score'] > 0:
                 summary = f"보유 재료 {len(available_ingredients)}개 활용"
                 if missing_ingredients:
@@ -381,9 +358,7 @@ async def find_local_recipe_by_name(recipe_name: str):
         return await get_default_recipes(req)
 
 async def get_default_recipes(req: RecommendRequest):
-    """
-    기본 레시피 반환 (파일이 없거나 오류 시 사용)
-    """
+
     default_recipes = [
         {
             "name": "간장계란볶음밥",
@@ -426,17 +401,14 @@ async def get_default_recipes(req: RecommendRequest):
         }
     ]
     
-    # 사용자 재료와 관련된 레시피만 필터링
     user_ingredients_lower = [ing.lower() for ing in req.ingredients]
     filtered_recipes = []
     
     for recipe in default_recipes:
         recipe_ingredients_lower = [ing.lower() for ing in recipe['ingredients']]
-        # 재료가 하나라도 겹치면 추천
         if any(user_ing in ' '.join(recipe_ingredients_lower) for user_ing in user_ingredients_lower):
             filtered_recipes.append(recipe)
     
-    # 겹치는 레시피가 없으면 첫 번째 레시피 반환
     if not filtered_recipes:
         filtered_recipes = [default_recipes[0]]
     
@@ -444,9 +416,7 @@ async def get_default_recipes(req: RecommendRequest):
 
 @router.get("/recipes")
 async def get_all_recipes():
-    """
-    모든 레시피 목록 반환
-    """
+
     try:
         current_recipes_file = find_recipes_file()
         if not current_recipes_file:
@@ -462,9 +432,7 @@ async def get_all_recipes():
 
 @router.get("/ingredients/translate/{ingredient}")
 async def translate_ingredient(ingredient: str):
-    """
-    영어 재료명을 한국어로 번역
-    """
+
     try:
         ingredient_map_file = Path(__file__).parent.parent / "data" / "ingredient_kor_map.json"
         
