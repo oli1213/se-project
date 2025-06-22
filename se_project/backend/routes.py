@@ -204,11 +204,11 @@ async def recommend_recipes(req: RecommendRequest):
         
         # LLM 서버 연결 실패 시 로컬 레시피 데이터 사용
         print("LLM 서버 연결 실패, 로컬 레시피 데이터 사용")
-        return await get_local_recipes_fallback(req)
+        return await get_local_recipes_with_smart_matching(req)
             
     except Exception as e:
         print(f"레시피 추천 중 예상치 못한 오류: {e}")
-        return await get_local_recipes_fallback(req)
+        return await get_local_recipes_with_smart_matching(req)
 
 async def find_local_recipe_by_name(recipe_name: str):
     """레시피 이름으로 로컬 데이터에서 상세 정보 찾기"""
